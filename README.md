@@ -25,7 +25,7 @@ No tutorials, no confusing docs, no broken configs. Just **download → run → 
 
 ### 1. Get the Release
 Download the latest pre-release:  
-👉 [cslipy v1.0.0](https://github.com/yourname/cslipy/releases/tag/v1.0.0)  
+👉 [cslipy v1.0.0](https://github.com/vennictus/cslipy/releases/tag/v1.0.0)  
 
 You’ll get a `.zip` containing:  
 - `cslipy.exe` → our installer runner  
