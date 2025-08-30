@@ -44,7 +44,9 @@ Open VS Code → Terminal → navigate to the folder → run:
 ---
 
 ### 3. What Happens Behind the Scenes 🪄
-- Installs **MSYS2** silently in the background  
+- Installs **MSYS2**
+- It will prompt you to install MSYS2 using GUI,select the default inputs for all of them,
+  in the last screen unselect "Run after installation Button"
 - Uses `pacman` (MSYS2’s package manager) to fetch:
   - `mingw-w64-x86_64-gcc` → modern C++ compiler  
   - `mingw-w64-x86_64-gdb` → debugger  
