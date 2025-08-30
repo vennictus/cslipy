@@ -1,9 +1,3 @@
-# Ignore test file
-hello.cpp
-
-# Ignore all executables
-*.exe
-
 # Ignore build / temporary files (future-proofing)
 *.obj
 *.o
