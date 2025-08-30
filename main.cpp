@@ -34,14 +34,20 @@ void progressBar(const std::string& task, int durationMs = 2000) {
 
 // --- Install ---
 void installCmd() {
-    std::cout << "📦 Installing cslipy toolchain...\n\n";
+    std::cout << "Installing cslipy toolchain...\n\n";
 
     // Step 1: Check MSYS2
     progressBar("Checking for MSYS2");
     int msysCheck = system("if exist C:\\msys64 (exit 0) else (exit 1)");
     if (msysCheck != 0) {
         progressBar("Running MSYS2 installer");
-        system("start /wait msys2-x86_64-20250622.exe");
+        int ret = system("start /wait msys2-x86_64-20250622.exe");
+        if (ret != 0) {
+            setColor(12);
+            std::cout << "\nMSYS2 installation was cancelled or failed. Aborting installation.\n";
+            setColor(7);
+            return; // stop installCmd early
+        }
     }
 
     // Step 2: Update MSYS2 core
@@ -51,7 +57,7 @@ void installCmd() {
     );
     if (updateResult != 0) {
         setColor(12);
-        std::cout << "❌ MSYS2 update failed.\n";
+        std::cout << "MSYS2 update failed. Check your network or reinstall MSYS2.\n";
         setColor(7);
         return;
     }
@@ -66,7 +72,7 @@ void installCmd() {
         );
         if (gccInstall != 0) {
             setColor(12);
-            std::cout << "❌ GCC installation failed.\n";
+            std::cout << "GCC installation failed. Aborting.\n";
             setColor(7);
             return;
         }
@@ -74,71 +80,84 @@ void installCmd() {
 
     // Step 4: Ensure PATH (Windows side)
     progressBar("Ensuring MinGW-w64 is in PATH");
-    system("powershell -Command \"if (-not ($env:Path -match 'C:\\\\msys64\\\\mingw64\\\\bin')) "
-           "{ [Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\\\\msys64\\\\mingw64\\\\bin', 'User') }\"");
+    int pathResult = system("powershell -Command \"if (-not ($env:Path -match 'C:\\\\msys64\\\\mingw64\\\\bin')) { [Environment]::SetEnvironmentVariable('Path', $env:Path + ';C:\\\\msys64\\\\mingw64\\\\bin', 'User') }\"");
+    if (pathResult != 0) {
+        setColor(14);
+        std::cout << "Warning: PATH could not be updated. Restart VS Code after manual PATH update.\n";
+        setColor(7);
+    }
 
     // Step 5: Test Hello World
-    // Step 5: Test Hello World
-progressBar("Compiling Hello World test");
-{
-    std::ofstream hello("hello.cpp");
-    hello << "#include <iostream>\nint main(){std::cout<<\"Hello from cslipy!\\n\";return 0;}";
+    progressBar("Compiling Hello World test");
+    {
+        std::ofstream hello("hello.cpp");
+        if (!hello) {
+            setColor(12);
+            std::cout << "Failed to create hello.cpp. Check write permissions.\n";
+            setColor(7);
+            return;
+        }
+        hello << "#include <iostream>\nint main(){std::cout<<\"Hello from cslipy!\\n\";return 0;}";
+    }
+
+    // Detect current directory (Windows)
+    char buffer[MAX_PATH];
+    GetCurrentDirectoryA(MAX_PATH, buffer);
+    std::string winDir(buffer);
+
+    // Convert it to MSYS2 path using cygpath
+    std::string msysDirCmd = "C:\\msys64\\usr\\bin\\bash -lc \"cygpath -u '" + winDir + "'\"";
+    FILE* pipe = _popen(msysDirCmd.c_str(), "r");
+    if (!pipe) {
+        setColor(12);
+        std::cout << "Failed to detect MSYS2 path. Aborting.\n";
+        setColor(7);
+        return;
+    }
+    char msysDir[512];
+    if (!fgets(msysDir, sizeof(msysDir), pipe)) {
+        _pclose(pipe);
+        setColor(12);
+        std::cout << "Failed to read MSYS2 path. Aborting.\n";
+        setColor(7);
+        return;
+    }
+    _pclose(pipe);
+
+    // Trim newline
+    std::string msysDirStr(msysDir);
+    msysDirStr.erase(msysDirStr.find_last_not_of(" \n\r\t") + 1);
+
+    // Compile in correct directory
+    std::string cmd =
+        "C:\\msys64\\usr\\bin\\bash -lc \""
+        "export PATH=/mingw64/bin:$PATH && "
+        "cd '" + msysDirStr + "' && "
+        "g++ hello.cpp -o hello && ./hello\"";
+
+    int runResult = system(cmd.c_str());
+    if (runResult != 0) {
+        setColor(12);
+        std::cout << "Hello World compilation failed. Check MSYS2 installation and PATH.\n";
+        setColor(7);
+        return;
+    }
 }
 
-// Detect current directory (Windows)
-char buffer[MAX_PATH];
-GetCurrentDirectoryA(MAX_PATH, buffer);
-std::string winDir(buffer);
-
-// Convert it to MSYS2 path using cygpath
-std::string msysDirCmd = "C:\\msys64\\usr\\bin\\bash -lc \"cygpath -u '" + winDir + "'\"";
-FILE* pipe = _popen(msysDirCmd.c_str(), "r");
-char msysDir[512];
-fgets(msysDir, sizeof(msysDir), pipe);
-_pclose(pipe);
-
-// Trim newline
-std::string msysDirStr(msysDir);
-msysDirStr.erase(msysDirStr.find_last_not_of(" \n\r\t") + 1);
-
-// Compile in correct directory
-std::string cmd = 
-    "C:\\msys64\\usr\\bin\\bash -lc \""
-    "export PATH=/mingw64/bin:$PATH && "
-    "cd '" + msysDirStr + "' && "
-    "g++ hello.cpp -o hello && ./hello\"";
-
-int runResult = system(cmd.c_str());
-if (runResult != 0) {
-    setColor(12);
-    std::cout << "❌ Hello World compilation failed.\n";
-    setColor(7);
-    return;
-}
-    
-}
-
-
-// --- Nuke ---
-// --- Nuke ---
 // --- Nuke ---
 void nukeCmd() {
-    std::cout << "💣 Running cslipy nuke...\n\n";
+    std::cout << "Running cslipy nuke...\n\n";
 
-    // Step 1: Kill running MSYS2 processes
     progressBar("Stopping MSYS2 processes");
     system("taskkill /F /IM msys2.exe >nul 2>&1");
     system("taskkill /F /IM bash.exe >nul 2>&1");
     system("taskkill /F /IM mintty.exe >nul 2>&1");
 
-    // Step 2: Remove MSYS2 installation
     progressBar("Removing MSYS2 installation");
     system("rmdir /S /Q C:\\msys64 >nul 2>&1");
 
-    // Step 3: Remove PATH entries (permanent + session)
     progressBar("Cleaning PATH");
-    system("powershell -Command \"[Environment]::SetEnvironmentVariable('Path', "
-           "($env:Path -replace 'C:\\\\msys64\\\\mingw64\\\\bin;?', ''), 'User')\"");
+    system("powershell -Command \"[Environment]::SetEnvironmentVariable('Path', ($env:Path -replace 'C:\\\\msys64\\\\mingw64\\\\bin;?', ''), 'User')\"");
 
     std::string currentPath;
     if (const char* p = std::getenv("PATH")) currentPath = p;
@@ -148,25 +167,21 @@ void nukeCmd() {
     }
     SetEnvironmentVariableA("PATH", currentPath.c_str());
 
-    // Step 4: Remove Start Menu shortcuts
     progressBar("Removing Start Menu entries");
     system("rmdir /S /Q \"C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\\MSYS2 64bit\" >nul 2>&1");
 
-    // Step 5: Remove uninstall registry entries
     progressBar("Cleaning registry uninstall entries");
     system("powershell -Command \"Remove-Item -Path 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\MSYS2 64bit' -Recurse -Force -ErrorAction SilentlyContinue\"");
     system("powershell -Command \"Remove-Item -Path 'HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\MSYS2 64bit' -Recurse -Force -ErrorAction SilentlyContinue\"");
 
-    // Step 6: Delete temp files
     progressBar("Deleting temp files");
     system("del /Q hello.cpp >nul 2>&1");
     system("del /Q hello.exe >nul 2>&1");
 
     setColor(10);
-    std::cout << "\n✅ System fully cleaned. cslipy nuked successfully.\n";
+    std::cout << "\nSystem fully cleaned. cslipy nuked successfully.\n";
     setColor(7);
 }
-
 
 // --- Version ---
 void versionCmd() {
@@ -176,12 +191,12 @@ void versionCmd() {
 
     if (result == 0) {
         setColor(10);
-        std::cout << "✅ Detected MinGW (g++) version:\n";
+        std::cout << "Detected MinGW (g++) version:\n";
         setColor(7);
         system("type temp_version.txt");
     } else {
         setColor(12);
-        std::cout << "⚠️ MinGW (g++) not found on this system.\n";
+        std::cout << "MinGW (g++) not found on this system.\n";
         setColor(7);
     }
 
