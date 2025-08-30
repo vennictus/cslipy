@@ -52,9 +52,6 @@ Open VS Code → Terminal → navigate to the folder → run:
   - `mingw-w64-x86_64-gdb` → debugger  
   - `make` → build tool  
 - Sets up your **PATH** so `g++` & `gdb` just work  
-- Generates **tasks.json** and **launch.json** in `.vscode/` so:
-  - `Ctrl+Shift+B` builds your code  
-  - `F5` runs/debugs without hassle  
 - Runs a **Hello World test program** to verify setup  
 
 ## ⚠️ Notes
