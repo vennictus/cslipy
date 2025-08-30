@@ -51,7 +51,8 @@ Open VS Code → Terminal → navigate to the folder → run:
   - `mingw-w64-x86_64-gdb` → debugger  
   - `make` → build tool  
 - Sets up your **PATH** so `g++` & `gdb` just work  
-- Runs a **Hello World test program** to verify setup  
+- Runs a **Hello World test program** to verify setup 
+- Vscode Restart recommend after installation finishes to configure Intellisense CPP extention and refresh terminal.
 
 ## ⚠️ Notes
 - 🪟 **Windows-only** (Linux/macOS already have GCC/Clang easily available).  
