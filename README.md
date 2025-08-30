@@ -7,15 +7,14 @@
 ---
 
 > 💻 **Tired of wasting hours setting up C++ in VS Code on Windows?**  
-Meet **cslipy** – a tiny script that automates the boring stuff: installing MSYS2, setting up MinGW, wiring compilers to PATH, and dropping ready-to-go tasks in VS Code.  
+Meet **cslipy** – a tiny script that automates the boring stuff: installing MSYS2, setting up MinGW, wiring compilers to PATH, and testing it while at it.
 No tutorials, no confusing docs, no broken configs. Just **download → run → code**.  
 
 ---
 
 ## 🚀 Features
 - ✅ **One-command setup** for C++ dev on Windows  
-- ⚡ Installs & configures **MSYS2 + MinGW-w64** (the real deal compilers)  
-- 🖥️ Prepares **Visual Studio Code** with tasks/launch.json for easy builds  
+- ⚡ Installs & configures **MSYS2 + MinGW-w64** (the real deal compilers)   
 - 🔧 Includes a **Hello World test** to confirm everything works  
 - 🛠️ Adds **g++/gdb** globally so you can use them anywhere in the terminal  
 - 🕶️ Minimal, no bloat – just a clean toolchain  
